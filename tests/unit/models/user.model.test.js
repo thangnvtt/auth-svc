@@ -8,6 +8,9 @@ describe('User model', () => {
       newUser = {
         name: faker.name.findName(),
         email: faker.internet.email().toLowerCase(),
+        fullname: faker.name.findName(),
+        phone: '+12345678901',
+        birthdate: faker.date.past(),
         password: 'password1',
         role: 'user',
       };

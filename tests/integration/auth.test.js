@@ -25,7 +25,11 @@ describe('Auth routes', () => {
       newUser = {
         name: faker.name.findName(),
         email: faker.internet.email().toLowerCase(),
+        username: 'newuser123',
         password: 'password1',
+        fullname: faker.name.findName(),
+        phone: '+12345678901',
+        birthdate: faker.date.past(),
       };
     });
 
@@ -37,14 +41,27 @@ describe('Auth routes', () => {
         id: expect.anything(),
         name: newUser.name,
         email: newUser.email,
+        username: newUser.username,
+        fullname: newUser.fullname,
+        phone: newUser.phone,
+        birthdate: newUser.birthdate.toISOString(),
         role: 'user',
         isEmailVerified: false,
+        profiles: expect.any(Array),
       });
 
       const dbUser = await User.findById(res.body.user.id);
       expect(dbUser).toBeDefined();
       expect(dbUser.password).not.toBe(newUser.password);
-      expect(dbUser).toMatchObject({ name: newUser.name, email: newUser.email, role: 'user', isEmailVerified: false });
+      expect(dbUser).toMatchObject({
+        name: newUser.name,
+        email: newUser.email,
+        username: newUser.username,
+        fullname: newUser.fullname,
+        phone: newUser.phone,
+        role: 'user',
+        isEmailVerified: false,
+      });
 
       expect(res.body.tokens).toEqual({
         access: { token: expect.anything(), expires: expect.anything() },
@@ -83,10 +100,10 @@ describe('Auth routes', () => {
   });
 
   describe('POST /v1/auth/login', () => {
-    test('should return 200 and login user if email and password match', async () => {
+    test('should return 200 and login user if username and password match', async () => {
       await insertUsers([userOne]);
       const loginCredentials = {
-        email: userOne.email,
+        username: userOne.username,
         password: userOne.password,
       };
 
@@ -96,8 +113,13 @@ describe('Auth routes', () => {
         id: expect.anything(),
         name: userOne.name,
         email: userOne.email,
+        username: userOne.username,
+        fullname: userOne.fullname,
+        phone: userOne.phone,
+        birthdate: userOne.birthdate.toISOString(),
         role: userOne.role,
         isEmailVerified: userOne.isEmailVerified,
+        profiles: expect.any(Array),
       });
 
       expect(res.body.tokens).toEqual({
@@ -106,27 +128,27 @@ describe('Auth routes', () => {
       });
     });
 
-    test('should return 401 error if there are no users with that email', async () => {
+    test('should return 401 error if there are no users with that username', async () => {
       const loginCredentials = {
-        email: userOne.email,
+        username: userOne.username,
         password: userOne.password,
       };
 
       const res = await request(app).post('/v1/auth/login').send(loginCredentials).expect(httpStatus.UNAUTHORIZED);
 
-      expect(res.body).toEqual({ code: httpStatus.UNAUTHORIZED, message: 'Incorrect email or password' });
+      expect(res.body).toEqual({ code: httpStatus.UNAUTHORIZED, message: 'Incorrect username or password' });
     });
 
     test('should return 401 error if password is wrong', async () => {
       await insertUsers([userOne]);
       const loginCredentials = {
-        email: userOne.email,
+        username: userOne.username,
         password: 'wrongPassword1',
       };
 
       const res = await request(app).post('/v1/auth/login').send(loginCredentials).expect(httpStatus.UNAUTHORIZED);
 
-      expect(res.body).toEqual({ code: httpStatus.UNAUTHORIZED, message: 'Incorrect email or password' });
+      expect(res.body).toEqual({ code: httpStatus.UNAUTHORIZED, message: 'Incorrect username or password' });
     });
   });
 

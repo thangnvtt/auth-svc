@@ -8,16 +8,42 @@ components:
         email:
           type: string
           format: email
+        username:
+          type: string
+          description: User's unique username
         name:
           type: string
+        fullname:
+          type: string
+          description: User's full name
+        phone:
+          type: string
+          description: User's phone number
+        birthdate:
+          type: string
+          format: date
+          description: User's birthdate
         role:
           type: string
           enum: [user, admin]
+        isEmailVerified:
+          type: boolean
+        profiles:
+          type: array
+          items:
+            type: string
+          description: Array of profile IDs
       example:
         id: 5ebac534954b54139806c112
         email: fake@example.com
+        username: fakeuser
         name: fake name
+        fullname: Fake User Full Name
+        phone: "+1234567890"
+        birthdate: "1990-01-01"
         role: user
+        isEmailVerified: false
+        profiles: []
 
     Token:
       type: object
@@ -38,6 +64,76 @@ components:
           $ref: '#/components/schemas/Token'
         refresh:
           $ref: '#/components/schemas/Token'
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        profileName:
+          type: string
+        displayName:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        profileType:
+          type: string
+          enum: [public, anonymous]
+        status:
+          type: string
+          enum: [private, public]
+        isActive:
+          type: boolean
+        isDefault:
+          type: boolean
+        settings:
+          type: object
+          properties:
+            privacy:
+              type: string
+              enum: [public, private, friends]
+            notifications:
+              type: object
+              properties:
+                email:
+                  type: boolean
+                push:
+                  type: boolean
+                sms:
+                  type: boolean
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      example:
+        id: 5ebac534954b54139806c113
+        userId: 5ebac534954b54139806c112
+        profileName: john_personal
+        displayName: John Doe
+        bio: Software developer and tech enthusiast
+        avatar: https://example.com/avatar.jpg
+        profileType: public
+        status: public
+        isActive: true
+        isDefault: true
+        settings:
+          privacy: public
+          notifications:
+            email: true
+            push: true
+            sms: false
+        metadata: {}
+        createdAt: 2020-05-12T16:18:04.793Z
+        updatedAt: 2020-05-12T16:18:04.793Z
 
     Error:
       type: object

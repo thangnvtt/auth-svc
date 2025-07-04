@@ -1,6 +1,18 @@
 const httpStatus = require('http-status');
 const { User } = require('../models');
 const ApiError = require('../utils/ApiError');
+const profileService = require('./profile.service');
+const logger = require('../config/logger');
+const { profileTypes, profileStatuses } = require('../config/profileEnums');
+
+/**
+ * Generate anonymous profile name with Neswa prefix and 6-digit random number
+ * @returns {string}
+ */
+const generateAnonymousProfileName = () => {
+  const randomNumber = Math.floor(100000 + Math.random() * 900000); // 6-digit random number
+  return `Neswa${randomNumber}`;
+};
 
 /**
  * Create a user
@@ -11,7 +23,48 @@ const createUser = async (userBody) => {
   if (await User.isEmailTaken(userBody.email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
-  return User.create(userBody);
+  if (await User.isUsernameTaken(userBody.username)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Username already taken');
+  }
+
+  const user = await User.create(userBody);
+
+  // Create default profiles for the new user
+  try {
+    // Create public profile using user's name
+    const publicProfile = await profileService.createProfile({
+      userId: user._id,
+      profileName: userBody.name,
+      displayName: userBody.name,
+      bio: '',
+      profileType: profileTypes.PUBLIC,
+      status: profileStatuses.PUBLIC,
+      isDefault: true, // Set public profile as default
+      isActive: true,
+    });
+
+    // Create anonymous profile with Neswa prefix
+    const anonymousProfile = await profileService.createProfile({
+      userId: user._id,
+      profileName: generateAnonymousProfileName(),
+      displayName: 'Anonymous User',
+      bio: '',
+      profileType: profileTypes.ANONYMOUS,
+      status: profileStatuses.PRIVATE,
+      isDefault: false,
+      isActive: true,
+    });
+
+    logger.info(
+      `Created profiles for user ${user.email}: public (${publicProfile.profileName}) and anonymous (${anonymousProfile.profileName})`
+    );
+  } catch (error) {
+    // If profile creation fails, we should still return the user
+    // but log the error for debugging
+    logger.error('Failed to create default profiles for user:', error.message);
+  }
+
+  return user;
 };
 
 /**
@@ -44,6 +97,15 @@ const getUserById = async (id) => {
  */
 const getUserByEmail = async (email) => {
   return User.findOne({ email });
+};
+
+/**
+ * Get user by username
+ * @param {string} username
+ * @returns {Promise<User>}
+ */
+const getUserByUsername = async (username) => {
+  return User.findOne({ username });
 };
 
 /**
@@ -84,6 +146,7 @@ module.exports = {
   queryUsers,
   getUserById,
   getUserByEmail,
+  getUserByUsername,
   updateUserById,
   deleteUserById,
 };

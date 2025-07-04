@@ -40,6 +40,10 @@ module.exports = router;
  *               - name
  *               - email
  *               - password
+ *               - fullname
+ *               - phone
+ *               - birthdate
+ *               - username
  *             properties:
  *               name:
  *                 type: string
@@ -47,15 +51,33 @@ module.exports = router;
  *                 type: string
  *                 format: email
  *                 description: must be unique
+ *               username:
+ *                 type: string
+ *                 description: must be unique
  *               password:
  *                 type: string
  *                 format: password
  *                 minLength: 8
  *                 description: At least one number and one letter
+ *               fullname:
+ *                 type: string
+ *                 minLength: 3
+ *                 description: User's full name (minimum 3 characters)
+ *               phone:
+ *                 type: string
+ *                 description: User's phone number
+ *               birthdate:
+ *                 type: string
+ *                 format: date
+ *                 description: User's birthdate (cannot be in the future)
  *             example:
- *               name: fake name
- *               email: fake@example.com
+ *               name: John Doe
+ *               email: john.doe@example.com
+ *               username: johndoe
  *               password: password1
+ *               fullname: John Doe Full Name
+ *               phone: "+1234567890"
+ *               birthdate: "1990-01-01"
  *     responses:
  *       "201":
  *         description: Created
@@ -85,17 +107,16 @@ module.exports = router;
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - username
  *               - password
  *             properties:
- *               email:
+ *               username:
  *                 type: string
- *                 format: email
  *               password:
  *                 type: string
  *                 format: password
  *             example:
- *               email: fake@example.com
+ *               username: johndoe
  *               password: password1
  *     responses:
  *       "200":
@@ -110,14 +131,14 @@ module.exports = router;
  *                 tokens:
  *                   $ref: '#/components/schemas/AuthTokens'
  *       "401":
- *         description: Invalid email or password
+ *         description: Invalid username or password
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
  *               code: 401
- *               message: Invalid email or password
+ *               message: Invalid username or password
  */
 
 /**
